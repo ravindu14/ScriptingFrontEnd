@@ -1,0 +1,30 @@
+.expand-list-container {
+  padding-top: 10px;
+  .title-container {
+    font-size: 12px;
+    font-weight: bold;
+
+    .collapse-icon {
+      padding-left: 30px;
+      border: 0px #e6e6e6;
+      min-height: 10px;
+    }
+  }
+  .sub-title-container {
+    font-size: 12px;
+    .dropdown {
+      list-style: none;
+      li {
+        padding: 5px;
+        //padding-left: 15px;
+      }
+    }
+  }
+  .childLess-title {
+    padding-left: 20px;
+  }
+  .childWith-title {
+    padding-top: 2px;
+    padding-bottom: 2px;
+  }
+}

@@ -1,0 +1,111 @@
+$tooltip-color: rgba(0, 0, 0, 0.8);
+$tooltip-text-color: #fff;
+
+.tooltip {
+  position: relative;
+  z-index: 998;
+  overflow: visible;
+
+  .tooltip-trigger {
+    display: inline-block;
+    text-decoration: underline;
+  }
+
+  .tooltip-bubble {
+    min-width: 120px;
+    max-width: 210px;
+    position: absolute;
+    z-index: 10;
+    &::after {
+      content: "";
+      position: absolute;
+    }
+  }
+
+  .tooltip-top {
+    bottom: 100%;
+    left: 50%;
+    padding-bottom: 9px;
+    transform: translateX(-50%);
+
+    &::after {
+      border-left: 9px solid transparent;
+      border-right: 9px solid transparent;
+      border-top: 9px solid $tooltip-color;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+  }
+
+  .tooltip-bottom {
+    top: 100%;
+    left: 50%;
+    padding-top: 9px;
+    transform: translateX(-50%);
+
+    &::after {
+      border-left: 9px solid transparent;
+      border-right: 9px solid transparent;
+      border-bottom: 9px solid $tooltip-color;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+  }
+
+  .tooltip-left {
+    top: 50%;
+    right: 100%;
+    padding-right: 9px;
+    transform: translateY(-50%);
+
+    &::after {
+      border-left: 9px solid $tooltip-color;
+      border-top: 9px solid transparent;
+      border-bottom: 9px solid transparent;
+      top: 50%;
+      right: 0;
+      transform: translateY(-50%);
+    }
+  }
+
+  .tooltip-right {
+    top: 50%;
+    left: 100%;
+    padding-left: 9px;
+    transform: translateY(-50%);
+
+    &::after {
+      border-right: 9px solid $tooltip-color;
+      border-top: 9px solid transparent;
+      border-bottom: 9px solid transparent;
+      top: 50%;
+      left: 0;
+      transform: translateY(-50%);
+    }
+  }
+
+  .tooltip-buttons {
+    background: $tooltip-color;
+    border-radius: 3px;
+    color: $tooltip-text-color;
+    font-size: 0.75rem;
+    height: 100%;
+    padding: 0;
+    text-align: left;
+    li {
+      cursor: pointer;
+      padding: 10px;
+      min-width: 150px;
+      border-top: 1px solid #e1e7e9;
+      &:first-child {
+        border-top: none;
+      }
+      a {
+        text-decoration: none;
+        color: $tooltip-text-color;
+      }
+    }
+  }
+}

@@ -1,0 +1,36 @@
+.home {
+  width: 100%;
+  &-header {
+    width: fit-content;
+    font-size: 30px;
+    font-weight: 700;
+    margin: 50px auto;
+    color: #333333;
+  }
+  &-content {
+    width: 40%;
+    margin: 0px auto;
+    &-label {
+      width: fit-content;
+      margin: 0px auto 20px auto;
+      font-size: 18px;
+      color: #474747;
+    }
+    &-input {
+      .form-input {
+        input {
+          border: 1px solid #e6e6e6 !important;
+          border-radius: 5px;
+          width: -webkit-fill-available;
+        }
+      }
+    }
+    &-button {
+      width: 100%;
+      margin-top: 20px;
+      button {
+        width: 100%;
+      }
+    }
+  }
+}

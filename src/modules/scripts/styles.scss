@@ -1,0 +1,52 @@
+.scripts {
+  &-header {
+    width: 50%;
+    margin: 20px auto;
+    &-label {
+      margin-top: 10px;
+      margin-right: 20px;
+      width: fit-content;
+      float: right;
+      color: #333333;
+    }
+  }
+  &-content {
+    &-name {
+      font-size: 30px;
+      color: #333333;
+      font-weight: 700;
+      width: fit-content;
+      margin: 30px auto;
+    }
+    &-item {
+      box-shadow: 0 0 10px 0 #999;
+      border-radius: 10px;
+      margin: 10px;
+      padding: 20px;
+      .form-input {
+        input {
+          border: 1px solid #e6e6e6 !important;
+          border-radius: 5px;
+          width: -webkit-fill-available;
+        }
+        textarea {
+          background-color: #ffffff;
+          max-height: 110px !important;
+          border: 1px solid #e6e6e6 !important;
+          border-radius: 5px;
+          width: 100%;
+          min-height: 250px;
+        }
+      }
+    }
+    &-add {
+      width: fit-content;
+      margin: 20px auto;
+      button {
+        width: 500px;
+        font-size: 14px !important;
+        font-weight: 700;
+      }
+    }
+  }
+}

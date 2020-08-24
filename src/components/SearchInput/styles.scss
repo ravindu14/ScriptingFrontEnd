@@ -1,0 +1,40 @@
+.auto-complete-input {
+  position: relative;
+  input {
+    border: 1px solid #e6e6e6 !important;
+    border-radius: 5px;
+    padding: 10px 20px;
+    width: 100%;
+    box-shadow: none;
+  }
+  .suggestions {
+    position: absolute;
+    z-index: 999;
+    width: 100%;
+    background: #f8f8f8;
+    box-shadow: 0 0 5px #00000020;
+    border: 1px solid #ececec;
+    background: #ffffff;
+    margin-top: 10px;
+    border-radius: 5px;
+    list-style: none;
+    text-align: left;
+    padding: 10px;
+    font-size: 13px;
+    height: 150px;
+    overflow: scroll;
+    li {
+      padding: 10px 15px;
+      border-bottom: 2px solid #f7f7f7;
+      cursor: pointer;
+      &:last-child {
+        border-bottom: none;
+      }
+    }
+    &.no-suggestions {
+      li {
+        cursor: default;
+      }
+    }
+  }
+}
