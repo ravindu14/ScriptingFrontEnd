@@ -1,0 +1,59 @@
+.actors {
+  &-header {
+    font-size: 30px;
+    color: #333333;
+    font-weight: 700;
+    width: fit-content;
+    margin: 30px auto;
+  }
+  &-content {
+    &-name {
+      font-size: 30px;
+      color: #333333;
+      font-weight: 700;
+      width: fit-content;
+      margin: 30px auto;
+    }
+    &-view {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      .actor-card {
+        background-color: #ececec;
+        padding: 10px;
+        margin: 10px;
+        border-radius: 10px;
+        &-name {
+          width: fit-content;
+          margin: 5px auto;
+        }
+        &-input {
+          margin: 5px auto;
+          input {
+            width: auto !important;
+            border: 1px solid #5e5d5d;
+            border-radius: 10px;
+          }
+        }
+        &-date {
+          background-color: #ffffff;
+          padding: 5px;
+          text-align: center;
+          border-radius: 10px;
+          background-color: #727272;
+          color: #ffffff;
+          margin-bottom: 5px;
+        }
+        &-button {
+          width: 100%;
+          button {
+            width: 100%;
+            background-color: rgba(50, 60, 104, 0.849);
+            color: #ffffff;
+            font-weight: 600;
+          }
+        }
+      }
+    }
+  }
+}

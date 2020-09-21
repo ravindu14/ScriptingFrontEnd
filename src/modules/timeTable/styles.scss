@@ -1,0 +1,85 @@
+.time-table {
+  &-header {
+    width: 50%;
+    margin: 20px auto;
+    &-label {
+      margin-top: 10px;
+      margin-right: 20px;
+      width: fit-content;
+      float: right;
+      color: #333333;
+    }
+  }
+  &-content {
+    &-name {
+      font-size: 30px;
+      color: #333333;
+      font-weight: 700;
+      width: fit-content;
+      margin: 30px auto;
+    }
+    &-fill {
+      .form-input {
+        input {
+          border: 1px solid #e6e6e6 !important;
+          border-radius: 5px;
+          width: -webkit-fill-available;
+        }
+      }
+      .checkbox-container {
+        margin-top: 8px;
+      }
+    }
+    &-table {
+      margin: 20px 0px;
+      table {
+        width: 100%;
+        text-align: center;
+        border-collapse: collapse;
+        border: 1px solid #e4e4e4;
+        .action-header {
+          width: 20%;
+          text-align: center;
+        }
+        tr {
+          th {
+            padding: 10px 15px;
+            border: 1px solid #e4e4e4;
+            font-weight: 300;
+            font-size: 13px;
+            max-width: 50px;
+            overflow: auto;
+            background-color: #c7c7c7;
+          }
+          td {
+            padding: 15px;
+            border: none;
+            border-bottom: 1px solid #e4e4e4;
+            font-weight: 300;
+            font-size: 13px;
+            max-width: 50px;
+            word-wrap: break-word;
+          }
+        }
+      }
+    }
+  }
+  .filter-head {
+    margin: 50px auto 30px auto;
+    &-label {
+      margin-top: 10px;
+      margin-right: 20px;
+      width: fit-content;
+      float: right;
+      color: #333333;
+    }
+    &-input {
+      .form-input {
+        input {
+          border: 1px solid #e6e6e6 !important;
+          border-radius: 5px;
+        }
+      }
+    }
+  }
+}

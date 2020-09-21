@@ -10,7 +10,7 @@ import "./styles.scss";
 type MultiSelectObject = {
   value: string,
   name: string,
-  isSelected: Boolean
+  isSelected: Boolean,
 };
 
 type MultiSelectInputType = MultiSelectObject | string;
@@ -18,24 +18,24 @@ type MultiSelectInputType = MultiSelectObject | string;
 type MultiSelectProps = {
   onChange: Function,
   options: MultiSelectInputType[],
-  placeholder?: string
+  placeholder?: string,
 };
 
 type MultiSelectState = {
   isOpen: boolean,
-  options: MultiSelectObject[]
+  options: MultiSelectObject[],
 };
 
 class MultiSelect extends PureComponent<MultiSelectProps, MultiSelectState> {
   static defaultProps = {
-    onChange: () => {}
+    onChange: () => {},
   };
 
   constructor(props: MultiSelectProps) {
     super(props);
     this.state = {
       isOpen: false,
-      options: []
+      options: [],
     };
 
     //$FlowFixMe Forced to do that for perf issues
@@ -51,7 +51,7 @@ class MultiSelect extends PureComponent<MultiSelectProps, MultiSelectState> {
   componentDidMount() {
     const options = this.getFormattedOptions(this.props);
     this.setState({
-      options
+      options,
     });
   }
 
@@ -59,7 +59,7 @@ class MultiSelect extends PureComponent<MultiSelectProps, MultiSelectState> {
     if (prevProps.options !== this.props.options) {
       const options = this.getFormattedOptions(this.props);
       this.setState({
-        options
+        options,
       });
     }
   }
@@ -67,7 +67,7 @@ class MultiSelect extends PureComponent<MultiSelectProps, MultiSelectState> {
   getFormattedOptions(props: MultiSelectProps) {
     const { options } = props;
     // $FlowFixMe
-    return options.map(option => {
+    return options.map((option) => {
       let name, value, isSelected;
       if (typeof option === "object") {
         name = option.name;
@@ -81,23 +81,29 @@ class MultiSelect extends PureComponent<MultiSelectProps, MultiSelectState> {
       return {
         name,
         value,
-        isSelected
+        isSelected,
       };
     });
   }
 
   toggleDropdown() {
     const { options } = this.props;
+    const { isOpen } = this.state;
+
+    if (isOpen) {
+      this.filterSelectedOptions();
+    }
+
     if (options && options.length > 0) {
       this.setState(({ isOpen }) => ({
-        isOpen: !isOpen
+        isOpen: !isOpen,
       }));
     }
   }
 
   closeDropdown() {
     this.setState({
-      isOpen: false
+      isOpen: false,
     });
   }
 
@@ -106,7 +112,7 @@ class MultiSelect extends PureComponent<MultiSelectProps, MultiSelectState> {
     value: $PropertyType<MultiSelectObject, "value">,
     isSelected: $PropertyType<MultiSelectObject, "isSelected">
   ) {
-    let updatedOptions = this.state.options.map(item => {
+    let updatedOptions = this.state.options.map((item) => {
       if (item.name === name) {
         return { ...item, isSelected: !isSelected };
       }
@@ -116,14 +122,14 @@ class MultiSelect extends PureComponent<MultiSelectProps, MultiSelectState> {
     this.setState(
       {
         ...this.state,
-        options: updatedOptions
-      },
-      this.filterSelectedOptions
+        options: updatedOptions,
+      }
+      //this.filterSelectedOptions
     );
   }
 
   filterSelectedOptions() {
-    let selectedOptions = this.state.options.filter(option => {
+    let selectedOptions = this.state.options.filter((option) => {
       return option.isSelected;
     });
 
@@ -136,20 +142,21 @@ class MultiSelect extends PureComponent<MultiSelectProps, MultiSelectState> {
 
     // Filter our options that don't contain the user's input
     let filteredOptions = options.filter(
-      option => option.name.toLowerCase().indexOf(userInput.toLowerCase()) > -1
+      (option) =>
+        option.name.toLowerCase().indexOf(userInput.toLowerCase()) > -1
     );
 
     if (filteredOptions.length === 0) {
       filteredOptions = [
         {
           name: "No Results",
-          value: "no-results"
-        }
+          value: "no-results",
+        },
       ];
     }
 
     this.setState({
-      options: filteredOptions
+      options: filteredOptions,
     });
   }
 
@@ -187,24 +194,20 @@ class MultiSelect extends PureComponent<MultiSelectProps, MultiSelectState> {
   }
 
   render() {
-    const { isOpen, selectedName, selectedValue } = this.state;
+    const { isOpen } = this.state;
     const { options, placeholder } = this.props;
-    const isSelected = selectedName !== null || selectedValue !== null;
+    //const isSelected = selectedName !== null || selectedValue !== null;
 
     return (
       <div className="multi-select-container">
         <div className="form-group">
           <div
             className={classnames("form-select", {
-              "dropdown-open": isOpen
+              "dropdown-open": isOpen,
             })}
           >
             <div className="selected-dropdown" onClick={this.toggleDropdown}>
-              {isSelected ? (
-                <span>{selectedName}</span>
-              ) : (
-                <span className="placeholder">{placeholder}</span>
-              )}
+              <span className="placeholder">{placeholder}</span>
               <span className="selector pull-right">
                 {isOpen && options && options.length > 0 ? (
                   <Icon icon="chevron-up" />
@@ -217,6 +220,7 @@ class MultiSelect extends PureComponent<MultiSelectProps, MultiSelectState> {
               <ul className="dropdown">{this.getOptions()} </ul>
             </div>
           </div>
+          {isOpen && <div className="backdrop" onClick={this.toggleDropdown} />}
         </div>
       </div>
     );

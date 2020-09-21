@@ -9,6 +9,7 @@ import {
   ON_SAVE_SCRIPT_DATA,
   ON_SAVE_INVENTORY_DATA,
   SET_INITIAL_SCRIPTS,
+  INITIALIZE_AUTH_INIT,
 } from "actionTypes/auth";
 import uuid from "uuid";
 
@@ -32,6 +33,15 @@ const initialState: AuthStateType = {
 function asyncAuthInit(state: AuthStateType) {
   return {
     ...state,
+    status: ASYNC_STATUS.INIT,
+    notification: null,
+  };
+}
+
+function asyncInitializeAuthInit(state: AuthStateType) {
+  return {
+    ...state,
+    status: ASYNC_STATUS.LOADING,
     notification: null,
   };
 }
@@ -118,6 +128,8 @@ export default (
   switch (type) {
     case ASYNC_AUTH_INIT:
       return asyncAuthInit(state);
+    case INITIALIZE_AUTH_INIT:
+      return asyncInitializeAuthInit(state);
     case ADD_NEW_SCRIPT_SUCCESS:
       return onAddNewScript(state, payload);
     case ON_SAVE_SCRIPT_DATA:

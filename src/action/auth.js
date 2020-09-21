@@ -1,11 +1,17 @@
 // @flow
 import {
   ASYNC_AUTH_INIT,
-  ADD_NEW_SCRIPT_SUCCESS,
   ON_SAVE_SCRIPT_DATA,
   ON_SAVE_INVENTORY_DATA,
   SET_INITIAL_SCRIPTS,
+  INITIALIZE_AUTH_INIT,
 } from "actionTypes/auth";
+
+function asyncInitializeAuthInit() {
+  return {
+    type: INITIALIZE_AUTH_INIT,
+  };
+}
 
 export function asyncAuthInit() {
   return {
@@ -14,8 +20,8 @@ export function asyncAuthInit() {
 }
 
 export function addNewScript(payload) {
-  return (dispatch) => {
-    dispatch({ type: ADD_NEW_SCRIPT_SUCCESS, payload });
+  return (dispatch, getState, serviceManager) => {
+    dispatch(asyncInitializeAuthInit());
   };
 }
 

@@ -1,6 +1,10 @@
 // @flow
 import React, { Component } from "react";
 import { connect } from "react-redux";
+import {
+  type AsyncStatusType,
+  type NotificationType,
+} from "shared/types/General";
 
 import Layout from "components/layout";
 import Input from "components/Input";
@@ -11,20 +15,46 @@ import Select from "components/Select";
 import Alert from "components/Alert";
 import uuid from "uuid";
 import Textarea from "components/TextArea";
+import Crew from "constants/crew";
+import Actors from "constants/actors";
+import MultiSelect from "components/MultiSelect";
+import Loader from "components/loader";
 
-import { asyncAuthInit, saveScriptData } from "action/auth";
+import { getAllScripts, initializeScript } from "action/script";
+import {
+  initializeScene,
+  getAllScenes,
+  onChangeSceneField,
+  updateScene,
+  onAddNewLayer,
+} from "action/scene";
+import { getAllInventory } from "action/inventory";
 import { queryParamsParse } from "shared/helpers/url";
+import { ASYNC_STATUS } from "constants/async";
 
 import "./styles.scss";
 
 type ScriptsPageProps = {
-  asyncAuthInit: Function,
-  saveScriptData: Function,
-  notification: string | null,
+  getAllInventory: Function,
+  onAddNewLayer: Function,
+  updateScene: Function,
+  onChangeSceneField: Function,
+  initializeScene: Function,
+  getAllScenes: Function,
+  initializeScript: Function,
+  getAllScripts: Function,
+  scriptNotification: NotificationType,
+  scriptStatus: AsyncStatusType,
   scripts: Array<any>,
+  sceneNotification: NotificationType,
+  sceneStatus: AsyncStatusType,
+  scenes: Array<any> | null,
   location: {
     search: string,
   },
+  inventoryNotification: NotificationType,
+  inventoryStatus: AsyncStatusType,
+  inventory: Array<any>,
 };
 
 type ScriptsPageState = {
@@ -34,188 +64,309 @@ type ScriptsPageState = {
 
 class ScriptsPage extends Component<ScriptsPageProps, ScriptsPageState> {
   state = {
-    scriptName: "",
-    data: [],
+    selectedScript: "",
   };
 
   componentDidMount() {
     const {
       location: { search },
+      getAllScripts,
+      initializeScript,
+      initializeScene,
     } = this.props;
 
     let filter = queryParamsParse(search);
 
+    initializeScript();
+    initializeScene();
+
     if (filter.scriptName) {
       this.onSelectScript(filter.scriptName);
+    } else {
+      getAllScripts();
     }
-
-    this.props.asyncAuthInit();
   }
 
-  onSelectScript = (name) => {
-    const { scripts } = this.props;
+  onSelectScript = (scriptId) => {
+    this.setState(
+      {
+        ...this.state,
+        selectedScript: scriptId,
+      },
+      this.getDependents(scriptId)
+    );
+  };
 
-    if (scripts.length > 0) {
-      let selectedData = scripts.filter(({ script }) => script === name);
-
-      this.setState({
-        scriptName: name,
-        data: selectedData[0].data,
-      });
-    }
+  getDependents = (scriptId) => {
+    this.props.getAllScenes(scriptId);
+    this.props.getAllInventory(scriptId);
   };
 
   addNewLayer = () => {
-    const selectedScript = this.state.data;
+    const { scenes } = this.props;
+    const { selectedScript } = this.state;
 
-    let newScript = {
+    const newLayer = {
       id: uuid.v4(),
-      image: "",
-      caseId: "",
-      type: "",
+      sceneNumber: (scenes.length + 1).toString(),
+      scriptId: selectedScript,
       location: "",
+      dayPart: "",
+      description: "",
       time: "",
-      details: "",
-      shot: "",
+      actors: [],
+      inventory: [],
+      crew: [],
+      stories: [],
     };
-    selectedScript.push(newScript);
 
-    this.setState({ ...this.state, data: selectedScript });
-  };
-
-  onChangeFormField = (id, field) => {
-    const { data } = this.state;
-
-    let updatedData = [
-      ...data.map((script) => {
-        if (script.id === id) {
-          return {
-            ...script,
-            ...field,
-          };
-        }
-        return script;
-      }),
-    ];
+    this.props.onAddNewLayer(newLayer);
 
     this.setState({
-      ...this.state,
-      data: updatedData,
+      newLayer,
     });
   };
 
-  onSubmit = () => {
-    const { scriptName, data } = this.state;
+  onChangeSceneField = (sceneId, field) => {
+    this.props.onChangeSceneField({ sceneId, field });
+  };
 
-    this.props.saveScriptData({ script: scriptName, data });
+  onSelectActors = (sceneId, actors) => {
+    const selectedActors = actors.map((actor) => {
+      let details = Actors.filter(({ actorName }) => actorName === actor.name);
+
+      return details[0];
+    });
+
+    this.props.onChangeSceneField({
+      sceneId,
+      field: { actors: selectedActors },
+    });
+  };
+
+  onSelectCrew = (sceneId, crew) => {
+    const selectedCrew = crew.map((member) => {
+      let details = Crew.filter(
+        ({ employeeName }) => employeeName === member.name
+      );
+
+      return details[0];
+    });
+
+    this.props.onChangeSceneField({
+      sceneId,
+      field: { crew: selectedCrew },
+    });
+  };
+
+  onSelectInventory = (sceneId, inInventory) => {
+    const { inventory } = this.props;
+
+    const selectedInventory = inInventory.map((item) => {
+      let details = inventory.filter(({ itemId }) => itemId === item.value);
+
+      return details[0];
+    });
+
+    this.props.onChangeSceneField({
+      sceneId,
+      field: { inventory: selectedInventory },
+    });
+  };
+
+  onSubmit = (sceneId) => {
+    const { scenes } = this.props;
+
+    let sceneToBeSubmit = scenes.filter((scene) => scene.id === sceneId);
+
+    this.props.updateScene(sceneToBeSubmit[0]);
   };
 
   render() {
-    const { notification, scripts } = this.props;
+    const {
+      scriptNotification,
+      scripts,
+      scriptStatus,
+      sceneNotification,
+      sceneStatus,
+      scenes,
+      inventory,
+      inventoryStatus,
+    } = this.props;
 
-    const { scriptName, data } = this.state;
+    const { scriptName } = this.state;
 
     let scriptOptions =
-      scripts.length > 0 ? [...scripts.map(({ script }) => script)] : [];
+      scripts.length > 0
+        ? [
+            ...scripts.map(({ id, script }) => {
+              return { name: script, value: id };
+            }),
+          ]
+        : [];
+
+    let actorOptions = Actors.map(({ actorName }) => actorName);
+
+    let crewOptions = Crew.map(({ employeeName }) => employeeName);
+
+    let inventoryOptions =
+      inventory && inventory.length > 0
+        ? inventory.map(({ itemId, itemName }) => {
+            return { name: itemName, value: itemId };
+          })
+        : [];
 
     return (
-      <Layout
-        actions={
-          <Button type={Button.TYPE.SUCCESS} onClick={this.onSubmit}>
-            Save Template
-          </Button>
-        }
-      >
-        {notification && (
-          <Alert type={Alert.TYPE.SUCCESS}>{notification}</Alert>
+      <Layout>
+        {scriptNotification && (
+          <Alert type={scriptNotification.type}>
+            {scriptNotification.message}
+          </Alert>
         )}
-        <div className="scripts">
-          <div className="scripts-header">
-            <Row>
-              <Col>
-                <div className="scripts-header-label">Select Script Name</div>
-              </Col>
-              <Col>
-                <div className="scripts-header-select">
-                  <Select
-                    placeholder="select"
-                    options={scriptOptions}
-                    selected={this.state.scriptName}
-                    onChange={this.onSelectScript}
-                  />
-                </div>
-              </Col>
-            </Row>
-          </div>
-          <div className="scripts-content">
-            <div className="scripts-content-name">{scriptName}</div>
-            {data.length > 0 &&
-              data.map((script, index) => {
-                return (
-                  <div key={index} className="scripts-content-item">
-                    <Row>
-                      <Col>
-                        <Input
-                          id={`${script.id}-number`}
-                          placeholder="script number"
-                          text={script.caseId}
-                          onChange={(caseId) =>
-                            this.onChangeFormField(script.id, { caseId })
-                          }
-                        />
-                      </Col>
-                      <Col>
-                        <Select
-                          placeholder="script type"
-                          selected={script.type}
-                          options={["Int", "Ext"]}
-                          onChange={(type) =>
-                            this.onChangeFormField(script.id, { type })
-                          }
-                        />
-                      </Col>
-                      <Col>
-                        <Input
-                          id={`${script.id}-location`}
-                          placeholder="script location"
-                          text={script.location}
-                          onChange={(location) =>
-                            this.onChangeFormField(script.id, { location })
-                          }
-                        />
-                      </Col>
-                      <Col>
-                        <Select
-                          placeholder="script time"
-                          selected={script.time}
-                          options={["Day", "Night"]}
-                          onChange={(time) =>
-                            this.onChangeFormField(script.id, { time })
-                          }
-                        />
-                      </Col>
-                    </Row>
-                    <Row>
-                      <Col>
-                        <Textarea
-                          id={`${script.id}-detail`}
-                          text={script.detail}
-                          onChange={(detail) =>
-                            this.onChangeFormField(script.id, { detail })
-                          }
-                        />
-                      </Col>
-                    </Row>
+        {sceneNotification && (
+          <Alert type={sceneNotification.type}>
+            {sceneNotification.message}
+          </Alert>
+        )}
+        {scriptStatus === ASYNC_STATUS.LOADING ||
+        sceneStatus === ASYNC_STATUS.LOADING ||
+        inventoryStatus === ASYNC_STATUS.LOADING ? (
+          <Loader isLoading />
+        ) : (
+          <div className="scripts">
+            <div className="scripts-header">
+              <Row>
+                <Col>
+                  <div className="scripts-header-label">Select Script Name</div>
+                </Col>
+                <Col>
+                  <div className="scripts-header-select">
+                    <Select
+                      placeholder="select"
+                      options={scriptOptions}
+                      selected={this.state.scriptName}
+                      onChange={this.onSelectScript}
+                    />
                   </div>
-                );
-              })}
-            {data.length > 0 && (
-              <div className="scripts-content-add">
-                <Button onClick={this.addNewLayer}>Add Layer</Button>
+                </Col>
+              </Row>
+            </div>
+            {scenes && (
+              <div className="scripts-content">
+                <div className="scripts-content-name">{scriptName}</div>
+                {scenes.length > 0 &&
+                  scenes.map((scene) => {
+                    return (
+                      <div key={scene.id} className="scripts-content-item">
+                        <Row>
+                          <Col>
+                            <Input
+                              id={`${scene.id}-number`}
+                              text={scene.sceneNumber}
+                              disabled
+                            />
+                          </Col>
+                          <Col>
+                            <Select
+                              placeholder="Day type"
+                              selected={scene.dayPart}
+                              options={[
+                                "Morning",
+                                "Afternoon",
+                                "Evening",
+                                "Night",
+                              ]}
+                              onChange={(dayPart) =>
+                                this.onChangeSceneField(scene.id, { dayPart })
+                              }
+                            />
+                          </Col>
+                          <Col>
+                            <Input
+                              id={`${scene.id}-location`}
+                              placeholder="script location"
+                              text={scene.location}
+                              onChange={(location) =>
+                                this.onChangeSceneField(scene.id, { location })
+                              }
+                            />
+                          </Col>
+                          <Col>
+                            <Input
+                              type="time"
+                              placeholder={`${scene.id}-time`}
+                              text={scene.time}
+                              onChange={(time) =>
+                                this.onChangeSceneField(scene.id, { time })
+                              }
+                            />
+                          </Col>
+                        </Row>
+                        <Row>
+                          <Col>
+                            <MultiSelect
+                              placeholder="Actors"
+                              options={actorOptions}
+                              onChange={(selectedActors) =>
+                                this.onSelectActors(scene.id, selectedActors)
+                              }
+                            />
+                          </Col>
+                          <Col>
+                            <MultiSelect
+                              placeholder="Crew"
+                              options={crewOptions}
+                              onChange={(selectedCrew) =>
+                                this.onSelectCrew(scene.id, selectedCrew)
+                              }
+                            />
+                          </Col>
+                          <Col>
+                            <MultiSelect
+                              placeholder="Inventory"
+                              options={inventoryOptions}
+                              onChange={(selectedInventory) =>
+                                this.onSelectInventory(
+                                  scene.id,
+                                  selectedInventory
+                                )
+                              }
+                            />
+                          </Col>
+                        </Row>
+                        <Row>
+                          <Col>
+                            <Textarea
+                              id={`${scene.id}-detail`}
+                              text={scene.description}
+                              onChange={(description) =>
+                                this.onChangeSceneField(scene.id, {
+                                  description,
+                                })
+                              }
+                            />
+                          </Col>
+                        </Row>
+                        <Row>
+                          <Col>
+                            <Button
+                              type={Button.TYPE.SUCCESS}
+                              onClick={() => this.onSubmit(scene.id)}
+                            >
+                              Save
+                            </Button>
+                          </Col>
+                        </Row>
+                      </div>
+                    );
+                  })}
+                <div className="scripts-content-add">
+                  <Button onClick={this.addNewLayer}>Add Layer</Button>
+                </div>
               </div>
             )}
           </div>
-        </div>
+        )}
       </Layout>
     );
   }
@@ -223,11 +374,27 @@ class ScriptsPage extends Component<ScriptsPageProps, ScriptsPageState> {
 
 const mapStateToProps = (state) => {
   return {
-    notification: state.auth.notification,
-    scripts: state.auth.scripts,
+    scriptNotification: state.script.notification,
+    scripts: state.script.scripts,
+    scriptStatus: state.script.status,
+    sceneNotification: state.scene.notification,
+    sceneStatus: state.scene.status,
+    scenes: state.scene.scenes,
+    inventoryNotification: state.inventory.notification,
+    inventoryStatus: state.inventory.status,
+    inventory: state.inventory.inventory,
   };
 };
 
-const Actions = { asyncAuthInit, saveScriptData };
+const Actions = {
+  initializeScript,
+  getAllScripts,
+  initializeScene,
+  getAllScenes,
+  onChangeSceneField,
+  updateScene,
+  onAddNewLayer,
+  getAllInventory,
+};
 
 export default connect(mapStateToProps, Actions)(ScriptsPage);

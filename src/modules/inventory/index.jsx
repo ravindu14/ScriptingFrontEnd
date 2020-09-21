@@ -10,50 +10,80 @@ import Row from "components/Row";
 import Col from "components/Col";
 import Select from "components/Select";
 import Switch from "components/Switch";
+import uuid from "uuid";
+import Icon from "components/icon";
+import Loader from "components/loader";
 
-import { asyncAuthInit, saveInventoryData } from "action/auth";
+import { getAllScripts, initializeScript } from "action/script";
+import {
+  initializeInventory,
+  getAllInventory,
+  updateInventory,
+  onAddNewInventory,
+  onChangeInventoryField,
+  onRemoveInventory,
+} from "action/inventory";
+import { isNotEmpty } from "shared/utils";
+import { ASYNC_STATUS } from "constants/async";
 
 import "./styles.scss";
-import { isNotEmpty } from "shared/utils";
 
 type InventoryPageProps = {
-  saveInventoryData: Function,
-  asyncAuthInit: Function,
-  notification: string | null,
+  getAllScripts: Function,
+  initializeScript: Function,
+  initializeInventory: Function,
+  getAllInventory: Function,
+  updateInventory: Function,
+  onAddNewInventory: Function,
+  onChangeInventoryField: Function,
+  onRemoveInventory: Function,
+  scriptNotification: NotificationType,
+  scriptStatus: AsyncStatusType,
   scripts: Array<any>,
+  notification: NotificationType,
+  status: AsyncStatusType,
+  inventory: Array<any> | null,
 };
 
 type InventoryPageState = {
   scriptName: string,
-  uploading: boolean,
+  scriptId: string,
+  data: {
+    itemName: string,
+    amount: number,
+    availability: boolean,
+    cost: number,
+  },
 };
 
 class InventoryPage extends Component<InventoryPageProps, InventoryPageState> {
   state = {
+    scriptId: "",
     scriptName: "",
-    inventory: [],
     data: {
       itemName: "",
-      amount: "",
+      amount: 0,
       availability: false,
+      cost: 0,
     },
   };
 
   componentDidMount() {
-    this.props.asyncAuthInit();
+    const { getAllScripts, initializeScript, initializeInventory } = this.props;
+
+    initializeScript();
+    getAllScripts();
+    initializeInventory();
   }
 
-  onSelectScript = (name) => {
-    const { scripts } = this.props;
-
-    if (scripts.length > 0) {
-      let selectedData = scripts.filter(({ script }) => script === name);
-
-      this.setState({
-        scriptName: name,
-        inventory: selectedData[0].inventory,
-      });
-    }
+  onSelectScript = (scriptId) => {
+    this.setState(
+      {
+        ...this.state,
+        scriptId,
+      },
+      this.props.getAllInventory(scriptId)
+    );
   };
 
   onFieldDataChange = (field) => {
@@ -77,15 +107,17 @@ class InventoryPage extends Component<InventoryPageProps, InventoryPageState> {
   };
 
   addInventory = () => {
-    const { data } = this.state;
+    const {
+      data: { itemName, cost, availability, amount },
+    } = this.state;
+    let itemId = uuid.v4();
 
-    let updatedInventory = this.state.inventory;
-
-    updatedInventory.push(data);
-
-    this.setState({
-      ...this.state,
-      inventory: updatedInventory,
+    this.props.onAddNewInventory({
+      itemName,
+      cost: parseFloat(cost),
+      availability,
+      amount: parseFloat(amount),
+      itemId,
     });
 
     this.resetDataFields();
@@ -96,46 +128,52 @@ class InventoryPage extends Component<InventoryPageProps, InventoryPageState> {
       ...this.state,
       data: {
         itemName: "",
-        amount: "",
+        amount: 0,
         availability: false,
+        cost: 0,
       },
     });
   };
 
-  onTableSwitchChange = (itemName) => {
-    let updatedInventory = this.state.inventory.map((item) => {
-      if (item.itemName === itemName) {
-        return {
-          ...item,
-          availability: !item.availability,
-        };
-      }
-      return item;
-    });
+  onTableSwitchChange = (itemId) => {
+    this.props.onChangeInventoryField(itemId);
 
     this.setState({
       ...this.state,
-      inventory: updatedInventory,
+      selectedInventory: itemId,
     });
   };
 
   onSubmit = () => {
-    const { scriptName, inventory } = this.state;
+    const { inventory } = this.props;
+    const { scriptId } = this.state;
 
-    this.props.saveInventoryData({ script: scriptName, inventory });
+    this.props.updateInventory({ scriptId, inventory });
   };
 
   render() {
-    const { notification, scripts } = this.props;
+    const {
+      scriptNotification,
+      scripts,
+      scriptStatus,
+      notification,
+      status,
+      inventory,
+    } = this.props;
 
     const {
       scriptName,
-      data: { itemName, amount, availability },
-      inventory,
+      data: { itemName, amount, availability, cost },
     } = this.state;
 
     let scriptOptions =
-      scripts.length > 0 ? [...scripts.map(({ script }) => script)] : [];
+      scripts.length > 0
+        ? [
+            ...scripts.map(({ id, script }) => {
+              return { name: script, value: id };
+            }),
+          ]
+        : [];
 
     return (
       <Layout
@@ -145,74 +183,98 @@ class InventoryPage extends Component<InventoryPageProps, InventoryPageState> {
           </Button>
         }
       >
-        {notification && (
-          <Alert type={Alert.TYPE.SUCCESS}>{notification}</Alert>
+        {scriptNotification && (
+          <Alert type={scriptNotification.type}>
+            {scriptNotification.message}
+          </Alert>
         )}
-        <div className="inventory">
-          <div className="inventory-header">
-            <Row>
-              <Col>
-                <div className="inventory-header-label">Select Script Name</div>
-              </Col>
-              <Col>
-                <div className="inventory-header-select">
-                  <Select
-                    placeholder="select"
-                    options={scriptOptions}
-                    selected={this.state.scriptName}
-                    onChange={this.onSelectScript}
-                  />
+        {notification && (
+          <Alert type={notification.type}>{notification.message}</Alert>
+        )}
+        {scriptStatus === ASYNC_STATUS.LOADING ||
+        status === ASYNC_STATUS.LOADING ? (
+          <Loader isLoading />
+        ) : (
+          <div className="inventory">
+            <div className="inventory-header">
+              <Row>
+                <Col>
+                  <div className="inventory-header-label">
+                    Select Script Name
+                  </div>
+                </Col>
+                <Col>
+                  <div className="inventory-header-select">
+                    <Select
+                      placeholder="select"
+                      options={scriptOptions}
+                      selected={this.state.scriptName}
+                      onChange={this.onSelectScript}
+                    />
+                  </div>
+                </Col>
+              </Row>
+            </div>
+            <div className="inventory-content">
+              <div className="inventory-content-name">{scriptName}</div>
+              {isNotEmpty(inventory) && (
+                <div className="inventory-content-fill">
+                  <Row>
+                    <Col>
+                      <Input
+                        id="itemName"
+                        placeholder="item name"
+                        text={itemName}
+                        onChange={(itemName) =>
+                          this.onFieldDataChange({ itemName })
+                        }
+                      />
+                    </Col>
+                    <Col>
+                      <Input
+                        id="amount"
+                        placeholder="amount"
+                        type="number"
+                        text={amount}
+                        onChange={(amount) =>
+                          this.onFieldDataChange({ amount })
+                        }
+                      />
+                    </Col>
+                    <Col size="1">
+                      <Switch
+                        id="availability"
+                        isChecked={availability}
+                        onChange={this.onFieldSwitchChange}
+                      />
+                    </Col>
+                    <Col>
+                      <Input
+                        id="cost"
+                        placeholder="cost"
+                        type="number"
+                        text={cost}
+                        onChange={(cost) => this.onFieldDataChange({ cost })}
+                      />
+                    </Col>
+                    <Col>
+                      <Button onClick={this.addInventory}>Add Inventory</Button>
+                    </Col>
+                  </Row>
                 </div>
-              </Col>
-            </Row>
-          </div>
-          <div className="inventory-content">
-            <div className="inventory-content-name">{scriptName}</div>
-            {isNotEmpty(scriptName) && (
-              <div className="inventory-content-fill">
-                <Row>
-                  <Col>
-                    <Input
-                      id="itemName"
-                      placeholder="item name"
-                      text={itemName}
-                      onChange={(itemName) =>
-                        this.onFieldDataChange({ itemName })
-                      }
-                    />
-                  </Col>
-                  <Col>
-                    <Input
-                      id="amount"
-                      placeholder="amount"
-                      text={amount}
-                      onChange={(amount) => this.onFieldDataChange({ amount })}
-                    />
-                  </Col>
-                  <Col>
-                    <Switch
-                      id="availability"
-                      isChecked={availability}
-                      onChange={this.onFieldSwitchChange}
-                    />
-                  </Col>
-                  <Col>
-                    <Button onClick={this.addInventory}>Add Inventory</Button>
-                  </Col>
-                </Row>
-              </div>
-            )}
-            {isNotEmpty(scriptName) && (
-              <div className="inventory-content-table">
-                <table>
-                  <tbody>
-                    <tr>
-                      <th>Item Name</th>
-                      <th>Amount</th>
-                      <th>Availability</th>
-                    </tr>
-                    {inventory.length > 0 &&
-                      inventory.map((detail, index) => {
+              )}
+              {isNotEmpty(inventory) && inventory.length > 0 && (
+                <div className="inventory-content-table">
+                  <table>
+                    <tbody>
+                      <tr>
+                        <th>Item Name</th>
+                        <th>Amount</th>
+                        <th>Availability</th>
+                        <th>Cost</th>
+                        <th>Action</th>
+                      </tr>
+                      {inventory.map((detail, index) => {
                         return (
                           <tr key={index}>
                             <td>{detail.itemName}</td>
@@ -222,19 +284,29 @@ class InventoryPage extends Component<InventoryPageProps, InventoryPageState> {
                                 id={`${itemName}-switch`}
                                 isChecked={detail.availability}
                                 onChange={() =>
-                                  this.onTableSwitchChange(detail.itemName)
+                                  this.onTableSwitchChange(detail.itemId)
+                                }
+                              />
+                            </td>
+                            <td>{detail.cost}</td>
+                            <td>
+                              <Icon
+                                icon="bin"
+                                onClick={() =>
+                                  this.props.onRemoveInventory(detail.itemId)
                                 }
                               />
                             </td>
                           </tr>
                         );
                       })}
-                  </tbody>
-                </table>
-              </div>
-            )}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
           </div>
-        </div>
+        )}
       </Layout>
     );
   }
@@ -242,11 +314,24 @@ class InventoryPage extends Component<InventoryPageProps, InventoryPageState> {
 
 const mapStateToProps = (state) => {
   return {
-    notification: state.auth.notification,
-    scripts: state.auth.scripts,
+    scriptNotification: state.script.notification,
+    scripts: state.script.scripts,
+    scriptStatus: state.script.status,
+    notification: state.inventory.notification,
+    status: state.inventory.status,
+    inventory: state.inventory.inventory,
   };
 };
 
-const Actions = { asyncAuthInit, saveInventoryData };
+const Actions = {
+  getAllScripts,
+  initializeScript,
+  initializeInventory,
+  getAllInventory,
+  updateInventory,
+  onAddNewInventory,
+  onChangeInventoryField,
+  onRemoveInventory,
+};
 
 export default connect(mapStateToProps, Actions)(InventoryPage);

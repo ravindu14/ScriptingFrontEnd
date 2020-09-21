@@ -139,6 +139,17 @@ class Sidebar extends PureComponent<SidebarProps, SidebarState> {
               <span>Inventory</span>
             </div>
           </Link>
+          <Link to="/actors">
+            <div
+              className={`menu-item ${activeMainCategory ===
+                this.CATEGORIES.SUPPLIERS && "active"}`}
+              onClick={() =>
+                this.onClickMainCategory(this.CATEGORIES.SUPPLIERS)
+              }
+            >
+              <span>Actors</span>
+            </div>
+          </Link>
           <Link to="/time-table">
             <div
               className={`menu-item ${activeMainCategory ===

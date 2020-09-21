@@ -38,4 +38,11 @@ export default [
     roles: [USER_ROLES.ADMIN],
     component: lazy(() => import("modules/timeTable")),
   },
+  {
+    path: "/actors",
+    exact: true,
+    auth: true,
+    roles: [USER_ROLES.ADMIN],
+    component: lazy(() => import("modules/actors")),
+  },
 ];

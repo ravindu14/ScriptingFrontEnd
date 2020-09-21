@@ -2,7 +2,6 @@ import React from "react";
 import ReactDOM from "react-dom";
 import { Provider } from "react-redux";
 
-import { setInitialScripts } from "action/auth";
 import { registerServices, serviceManager } from "services/manager";
 import * as serviceWorker from "./serviceWorker";
 import configureStore from "store";
@@ -12,7 +11,7 @@ import "./index.scss";
 
 const settings = {
   api: {
-    baseUrl: "",
+    baseUrl: "http://localhost:8080",
   },
 };
 
@@ -20,7 +19,7 @@ registerServices(settings);
 
 const store = configureStore({}, serviceManager);
 
-store.dispatch(setInitialScripts());
+//store.dispatch(setInitialScripts());
 
 ReactDOM.render(
   <Provider store={store}>
