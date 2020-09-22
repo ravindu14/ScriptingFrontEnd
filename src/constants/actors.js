@@ -19,6 +19,4 @@ export default [
   { actorId: "mnjnd3", actorName: "Sudesh" },
   { actorId: "8uusdc", actorName: "Vimukthi" },
   { actorId: "9iddn3", actorName: "Malinda" },
-  { actorId: "jk23d4", actorName: "Sahan" },
-  { actorId: "8edj32", actorName: "Pradeep" },
 ];

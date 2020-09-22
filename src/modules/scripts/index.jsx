@@ -118,6 +118,7 @@ class ScriptsPage extends Component<ScriptsPageProps, ScriptsPageState> {
       inventory: [],
       crew: [],
       stories: [],
+      weatherstatus: "",
     };
 
     this.props.onAddNewLayer(newLayer);

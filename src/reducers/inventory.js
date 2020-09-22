@@ -109,7 +109,10 @@ export default (
     case GET_ALL_INVENTORY_SUCCESS:
       return {
         ...state,
-        inventory: payload[0].inventory ? payload[0].inventory : [],
+        inventory:
+          payload && payload.length > 0 && payload[0].inventory
+            ? payload[0].inventory
+            : [],
         status: ASYNC_STATUS.SUCCESS,
       };
     case ON_ADD_NEW_INVENTORY:
